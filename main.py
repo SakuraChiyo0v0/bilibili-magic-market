@@ -13,8 +13,8 @@ show_file_path = "show.xlsx"
 nextId = None
 payload = json.dumps({
     "categoryFilter": "2312",
-    "priceFilters": ["5000-9000"],
-    "discountFilters": ["10-100"],
+    "priceFilters": ["20000-0", "5000-10000", "3000-5000", "10000-20000", "2000-3000", "0-2000"],
+    "discountFilters": [],
     "nextId": nextId
 })
 headers = {
@@ -212,23 +212,28 @@ def read_from_excel(skip_check):
 def main():
     url = "https://mall.bilibili.com/mall-magic-c/internet/c2c/v2/list"
 
+    skip_check = True
+    # skip_check = is_skip_check()
     print("读取历史数据中...请耐心等待")
-    skip_check = is_skip_check()
     items_hash = read_from_excel(skip_check)
     print("读取历史数据完成,开始进行请求")
     print("=" * 50)
+    response_data = None
     try:
         while True:
-            response = requests.post(url, headers=headers, data=payload)
-            response.raise_for_status()  # 检查请求是否成功
-            response_data = response.json()
-            nextId = response_data["data"]["nextId"]
-            if nextId is None:
-                break
-            data = response_data["data"]["data"]
-            print("===============华丽的分割线😎华丽的分割线===============")
-            data_processing(data, items_hash)
-            time.sleep(3)
+            try:
+                response = requests.post(url, headers=headers, data=payload)
+                response.raise_for_status()  # 检查请求是否成功
+                response_data = response.json()
+                nextId = response_data["data"]["nextId"]
+                if nextId is None:
+                    break
+                data = response_data["data"]["data"]
+                print("===============华丽的分割线😎华丽的分割线===============")
+                data_processing(data, items_hash)
+                time.sleep(3)
+            except KeyError as e:
+                logging.error(f"KeyError: {e}. Response data: {response_data}")
     except requests.RequestException as e:
         logging.error(f"网络请求异常, 错误信息: {str(e)}")
     except KeyboardInterrupt:
