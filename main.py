@@ -55,6 +55,18 @@ def get_item_link(c2cItems_id):
             f"page=magic-market_detail&noTitleBar=1&itemsId={c2cItems_id}&from=market_index")
 
 
+def is_skip_check():
+    while True:
+        skip_check = input("是否跳过历史数据校验 (y/n): ").strip().lower()
+        if skip_check in ['y', 'n']:
+            if skip_check == 'y':
+                return True
+            else:
+                return False
+        else:
+            print("输入无效，请输入 y 或 n。")
+
+
 def is_item_valid(item, ):
     url = "https://mall.bilibili.com/mall-magic-c/internet/c2c/items/queryC2cItemsDetail?c2cItemsId=" + str(
         item.c2cItems_id)
@@ -160,12 +172,18 @@ def save_to_excel(items_hash):
         logging.error(f"生成表格异常, 错误信息: {str(e)}")
 
 
-def read_from_excel():
+def read_from_excel(skip_check):
     try:
         df = pd.read_excel(data_file_path)
+        # 获取 DataFrame 的总数据量
+        total_rows,total_columns = df.shape
+        index = 1
+        print(f"总行数: {total_rows}")
         items_hash = {}
         for _, row in df.iterrows():
             try:
+                print(f"({index}/{total_rows})",end=" ")
+                index+= 1
                 item = Item(
                     c2cItems_id=row['交易ID'],
                     goods_id=row['谷子ID'],
@@ -175,9 +193,9 @@ def read_from_excel():
                     marketPrice=float(row['市场价']),
                     link=row['链接']
                 )
-
-                print(f"读取到商品: {item}")
-                items_hash[item.goods_id] = item
+                if skip_check or is_item_valid(item):
+                    print(f"读取到商品: {item}")
+                    items_hash[item.goods_id] = item
             except Exception as e:
                 logging.error(f"处理行 {row} 时出现异常, 错误信息: {str(e)}")
                 continue  # 跳过当前行，继续处理下一行
@@ -195,7 +213,8 @@ def main():
     url = "https://mall.bilibili.com/mall-magic-c/internet/c2c/v2/list"
 
     print("读取历史数据中...请耐心等待")
-    items_hash = read_from_excel()
+    skip_check = is_skip_check()
+    items_hash = read_from_excel(skip_check)
     print("读取历史数据完成,开始进行请求")
     print("=" * 50)
     try:
