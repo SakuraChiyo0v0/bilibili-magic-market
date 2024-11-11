@@ -9,8 +9,8 @@ from openpyxl import load_workbook
 
 # 配置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-data_file_path = "data.xlsx"
-show_file_path = "show.xlsx"
+data_file_path = "output/data.xlsx"
+show_file_path = "output/show.xlsx"
 # 请求参数
 nextId = None
 
