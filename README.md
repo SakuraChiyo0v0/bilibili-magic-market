@@ -34,6 +34,23 @@ pip install requests pandas openpyxl
 
 您需要根据自己的需求更新请求头信息，特别是 **cookie**，以确保程序能够成功从 Bilibili 获取数据。
 
+## 价格区间更改
+
+更改priceFilters的数组
+
+价格区间(单位分) 根据自己的需求进行更改:
+
+"0-2000", "3000-5000", "20000-0", "5000-10000", "2000-3000", "10000-20000", "20000-0"
+
+```
+payload = json.dumps({
+    "categoryFilter": "2312",
+    "priceFilters": ["10000-20000", "20000-0"],
+    "discountFilters": [],
+    "nextId": nextId
+})
+```
+
 ### 数据文件路径
 
 您可以根据需要修改以下文件路径：

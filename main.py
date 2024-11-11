@@ -13,11 +13,12 @@ data_file_path = "data.xlsx"
 show_file_path = "show.xlsx"
 # 请求参数
 nextId = None
-# 价格区间(单位分):
+
+# 价格区间(单位分) 根据自己的需求进行更改:
 # "0-2000", "3000-5000", "20000-0", "5000-10000", "2000-3000", "10000-20000", "20000-0"
 payload = json.dumps({
     "categoryFilter": "2312",
-    "priceFilters": ["10000-20000", "20000-0"],
+    "priceFilters": ["0-2000", "3000-5000", "20000-0", "5000-10000", "2000-3000", "10000-20000", "20000-0"],
     "discountFilters": [],
     "nextId": nextId
 })
@@ -59,12 +60,12 @@ def get_item_link(c2cItems_id):
 
 def is_skip_check():
     while True:
-        skip_check = input("是否跳过历史数据校验 (y/n): %注意 由于控制请求速度原因 开启后将需要长时间加载%\n").strip().lower()
+        skip_check = input("是否开启历史数据校验 (y/n): %注意 由于控制请求速度原因 开启后将需要长时间加载 建议输入n%\n").strip().lower()
         if skip_check in ['y', 'n']:
             if skip_check == 'y':
-                return True
-            else:
                 return False
+            else:
+                return True
         else:
             print("输入无效，请输入 y 或 n。")
 
