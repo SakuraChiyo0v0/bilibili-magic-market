@@ -3,6 +3,7 @@ import time
 import requests
 import pandas as pd
 import logging
+import os
 
 from openpyxl import load_workbook
 
@@ -231,7 +232,12 @@ def read_from_excel(skip_check):
 
 def main():
     url = "https://mall.bilibili.com/mall-magic-c/internet/c2c/v2/list"
-
+    # 获取文件夹路径
+    folder_path = os.path.dirname(data_file_path)
+    # 创建文件夹（如果不存在）
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+        print(f"创建output文件夹: {folder_path}")
     skip_check = is_skip_check()
     print("读取历史数据中...请耐心等待")
     items_hash = read_from_excel(skip_check)
