@@ -6,6 +6,7 @@ import logging
 
 from openpyxl import load_workbook
 
+
 # 配置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 data_file_path = "data.xlsx"
@@ -58,7 +59,7 @@ def get_item_link(c2cItems_id):
 
 def is_skip_check():
     while True:
-        skip_check = input("是否跳过历史数据校验 (y/n): ").strip().lower()
+        skip_check = input("是否跳过历史数据校验 (y/n): %注意 由于控制请求速度原因 开启后将需要长时间加载%\n").strip().lower()
         if skip_check in ['y', 'n']:
             if skip_check == 'y':
                 return True
@@ -68,7 +69,7 @@ def is_skip_check():
             print("输入无效，请输入 y 或 n。")
 
 
-def is_item_valid(item, ):
+def is_item_valid(item):
     url = "https://mall.bilibili.com/mall-magic-c/internet/c2c/items/queryC2cItemsDetail?c2cItemsId=" + str(
         item.c2cItems_id)
     time.sleep(1)
@@ -119,8 +120,12 @@ def data_processing(data, items_hash):
             continue
 
 
+
+
+
 def save_to_excel(items_hash):
     try:
+        # 创建 DataFrame
         df = pd.DataFrame([
             {
                 '交易ID': str(item.c2cItems_id),
@@ -134,46 +139,52 @@ def save_to_excel(items_hash):
             for item in items_hash.values()
         ])
 
-        # 保存 DataFrame 到 Excel 文件
+        # 保存原始数据
         df.to_excel(data_file_path, index=False)
 
-        # 更好的显示 排除不必要信息 图片显示 链接点击
+        # 优化显示，删除部分列，增加优惠信息
         df = df.drop(columns=['交易ID', '谷子ID'])
         df.insert(df.columns.get_loc('市场价') + 1, '优惠价格',
                   (df['市场价'] - df['交易价格']).apply(lambda x: f"{x:.2f}元"))
         df.insert(df.columns.get_loc('市场价') + 2, '折数',
                   (round(df['交易价格'] / df['市场价'], 2) * 10).apply(lambda x: f"{x:.1f}折"))
-        # 将交易价格和市场价转换为字符串并添加“元”字
+
+        # 转换为带“元”的字符串
         df['交易价格'] = df['交易价格'].apply(lambda x: f"{x:.2f}元")
         df['市场价'] = df['市场价'].apply(lambda x: f"{x:.2f}元")
-        # 修改 '链接' 列，将其转换为 Excel 超链接格式
+
+        # 将图片的 URL 作为超链接，显示为“点击查看图片”
+        df['商品图片'] = df['商品图片'].apply(
+            lambda x: f'=HYPERLINK("{x}", "点击查看图片")' if isinstance(x, str) and x.startswith('http') else x
+        )
+
+        # 超链接格式
         df['链接'] = df['链接'].apply(
-            lambda x: f'=HYPERLINK("{x}", "点击打开")' if isinstance(x, str) and x.startswith('http') else x)
+            lambda x: f'=HYPERLINK("{x}", "点击打开")' if isinstance(x, str) and x.startswith('http') else x
+        )
+
         df.to_excel(show_file_path, index=False)
 
-        # 使用 openpyxl 调整列宽
+        # 调整 Excel 的列宽
         wb = load_workbook(show_file_path)
         ws = wb.active
-
-        # 设置各列的宽度
         column_widths = {
             'A': 50,  # 商品名
             'B': 10,  # 交易价格
             'C': 10,  # 市场价
             'D': 10,  # 折数
             'E': 10,  # 优惠价格
-            'F': 80,  # 商品图片
-            'G': 80,  # 链接
+            'F': 40,  # 商品图片（超链接）
+            'G': 40  # 链接
         }
-
         for col, width in column_widths.items():
             ws.column_dimensions[col].width = width
 
-        # 保存工作簿
         wb.save(show_file_path)
 
         print(f"数据已保存到 {data_file_path}")
         print(f"您可以查看 {show_file_path} 以获取更好的体验")
+
     except PermissionError:
         logging.error(f"请检查您是否正在打开表格文件 这将导致无法生成表格")
     except Exception as e:
@@ -220,8 +231,7 @@ def read_from_excel(skip_check):
 def main():
     url = "https://mall.bilibili.com/mall-magic-c/internet/c2c/v2/list"
 
-    skip_check = True
-    # skip_check = is_skip_check()
+    skip_check = is_skip_check()
     print("读取历史数据中...请耐心等待")
     items_hash = read_from_excel(skip_check)
     print("读取历史数据完成,开始进行请求")
