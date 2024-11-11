@@ -57,11 +57,6 @@ https://mall.bilibili.com/neul-next/index.html?page=magic-market_detail&noTitleB
 | img         | 商品图片 |
 | price       | 交易价格 |
 | marketPrice | 市场价   |
-|             |          |
-|             |          |
-|             |          |
-|             |          |
-|             |          |
 
 # 已知BUG
 
